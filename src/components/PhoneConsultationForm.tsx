@@ -1,9 +1,8 @@
 import { useState, useRef } from 'react';
-import { Button } from './ui/button';	
+import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
-import UtmHiddenFields from './UtmHiddenFields'; // ✨ UTM 숨김필드
 
 interface PhoneConsultationFormProps {
   title?: string;
@@ -41,14 +40,10 @@ export function PhoneConsultationForm({ title }: PhoneConsultationFormProps) {
   const resetForm = () =>
     setFormData({ name: '', birthDate: '', gender: '', phoneNumber: '', agreedToTerms: false });
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => { // ✨ 타입 명시
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
-
-    // ✨ 폼 안의 숨김 UTM 필드까지 모두 수집
-    const form = event.currentTarget;
-    const formElements = Object.fromEntries(new FormData(form).entries());
 
     const now = new Date();
     const kstDate = new Date(now.getTime() + (9 * 60 * 60 * 1000));
@@ -62,9 +57,6 @@ export function PhoneConsultationForm({ title }: PhoneConsultationFormProps) {
         birth: formData.birthDate.trim(),
         gender: formData.gender as '남' | '여' | '',
         requestedAt: kstDate.toISOString(),
-
-        // ✨ UTM/landing/referrer/first_utm/last_utm 등 포함
-        ...formElements,
       };
 
       const res = await fetch('/api/submit', {
@@ -114,9 +106,6 @@ export function PhoneConsultationForm({ title }: PhoneConsultationFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          {/* ✨ 숨김 UTM 필드 */}
-          <UtmHiddenFields />
-
           <div className="space-y-2">
             <label className="text-white text-base block">이름</label>
             <Input
@@ -218,7 +207,7 @@ export function PhoneConsultationForm({ title }: PhoneConsultationFormProps) {
           <div className="pt-2">
             <Button
               type="submit"
-              disabled={	
+              disabled={
                 !formData.name ||
                 !formData.birthDate ||
                 !formData.gender ||
